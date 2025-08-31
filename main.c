@@ -1,21 +1,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <windows.h>
 
-#define CLEAR_SCREEN() printf("\e[1;1H\e[2J")
+#define CLEAR_SCREEN "\033[2J\033[H"
+#define RESET_CURSOR "\033[H"
+#define SAVE_CURSOR_POS "\033[s"
+#define RESTORE_CURSOR_POS "\033[u"
+
+char buffer[1000];    
+int total_characters = 0;
+
+void print_file()
+{
+
+    fprintf(stdout, CLEAR_SCREEN);
+    for(int char_p = 0; char_p <= total_characters; char_p++)
+    {
+        fprintf(stdout, "%c", buffer[char_p]);
+    }
+    fprintf(stdout, RESET_CURSOR);
+}
 
 int editor(char* filename)
 {
     FILE* fp = fopen(filename, "a+");
     if (fp == NULL) {
-        printf("Error opening file: %s\n", filename);
+        fprintf(stderr, "Error opening file: %s\n", filename);
         return -1;
     }
 
     // file buffer -> contains contents of the file
-    char buffer[1000];    
     char c;
-    int total_characters = 0;
 
     // Fill buffer
     while ((c = fgetc(fp)) != EOF)
@@ -26,26 +42,19 @@ int editor(char* filename)
         }
         else
         {
-            printf("File is too big\n");
+            fprintf(stderr, "File is too big\n");
             return -1;
         }
     }
     int cursor_pos = 0;
-    while (1)
-    {
-        CLEAR_SCREEN();
-        for(int char_p = 0; char_p <= total_characters; char_p++)
-        {
-            printf("%c", buffer[char_p]);
-        }
-    }
 
+    print_file();
 }
 
 int main (int argc, char* argv[])
 {
     if (argc != 2) {
-        printf("Usage: clit <filename>\n");
+        fprintf(stderr, "Usage: clit <filename>\n");
         exit(-1);
     }
 
